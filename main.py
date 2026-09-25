@@ -154,40 +154,33 @@ def recall_profile(chat_id, key_list):
     return profile
 def send_to_n8n(chat_id, message):
     try:
-        # Get all saved memories for this user
         conn = sqlite3.connect(DB_FILE)
         cursor = conn.cursor()
 
         cursor.execute(
-            "SELECT memory_key, memory_value FROM user WHERE chat_id=?",
-            (str(chat_id),)
+            "SELECT memory_key, memory_value FROM user WHERE chat_id = ?",
+            (chat_id,)
         )
 
-        rows = cursor.fetchall()
+        memories = cursor.fetchall()
         conn.close()
 
-        # Convert memories into simple text
         memory_text = "\n".join(
-            f"{key}: {value}" for key, value in rows
+            f"{key}: {value}" for key, value in memories
         )
 
-        response = requests.post(
+        requests.post(
             N8N_WEBHOOK_URL,
             json={
                 "chat_id": chat_id,
                 "message": message,
                 "memory": memory_text
             },
-            timeout=15
+            timeout=5
         )
 
-        response.raise_for_status()
-
-        return response.json()
-
     except Exception as e:
-        print("n8n error:", e)
-        return None
+        print(f"n8n error: {e}")
 
 @bot.message_handler(commands=['start'])
 def start(message):
@@ -397,24 +390,8 @@ def conversational(message):
                 )
 
         else:
-            result = send_to_n8n(chat_id, User_text)
-
-            if result:
-        # Save any new memories returned by n8n
-                memories = result.get("memories", [])
-
-                for memory in memories:
-                    key = memory.get("key")
-                    value = memory.get("value")
-
-                    if key and value:
-                        remembered_fact(chat_id, key, value)
-
-        # Send AI response to Telegram
-                ai_response = result.get("reply")
-
-                if ai_response:
-                    bot.send_message(chat_id, ai_response)
+            send_to_n8n(chat_id, User_text)
+            return
 
     elif current_state == 'ASK_TYPE':
 
@@ -524,4 +501,5 @@ except Exception as e:
     print(f"BOT ERROR: {e}")
 
     raise
+
 
