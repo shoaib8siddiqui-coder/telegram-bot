@@ -769,6 +769,18 @@ def conversational(message):
     # =====================================================
 
     elif current_state == "CHOOSE_VALUE":
+         markup = types.ReplyKeyboardMarkup(
+            resize_keyboard=True,
+            one_time_keyboard=False
+        )
+
+        markup.add(
+            "View Profile",
+            "Add More Info",
+            "Fetch Data",
+            "Fetch All Data"
+        )
+
 
         # Example:
         #
@@ -848,7 +860,7 @@ def conversational(message):
                 f"You entered {len(temp_key)} keys "
                 f"but {len(values)} values.\n\n"
                 "Please enter the same number of "
-                "values separated by commas."
+                "values separated by commas.",reply_markup=markup
             )
 
             return
