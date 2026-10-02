@@ -32,7 +32,12 @@ DB_FILE = os.path.join(
 
 
 def tables():
-    connection = sqlite3.connect(DB_FILE, check_same_thread=False)
+
+    connection = sqlite3.connect(
+        DB_FILE,
+        check_same_thread=False
+    )
+
     cursor = connection.cursor()
 
     cursor.execute("""
@@ -63,7 +68,12 @@ tables()
 # =========================================================
 
 def get_user_state(chat_id):
-    connection = sqlite3.connect(DB_FILE, check_same_thread=False)
+
+    connection = sqlite3.connect(
+        DB_FILE,
+        check_same_thread=False
+    )
+
     cursor = connection.cursor()
 
     cursor.execute(
@@ -72,6 +82,7 @@ def get_user_state(chat_id):
     )
 
     row = cursor.fetchone()
+
     connection.close()
 
     if row and row[0]:
@@ -81,7 +92,12 @@ def get_user_state(chat_id):
 
 
 def update_user_state(chat_id, step):
-    connection = sqlite3.connect(DB_FILE, check_same_thread=False)
+
+    connection = sqlite3.connect(
+        DB_FILE,
+        check_same_thread=False
+    )
+
     cursor = connection.cursor()
 
     cursor.execute(
@@ -101,9 +117,14 @@ def update_user_state(chat_id, step):
 # =========================================================
 
 def recall_fact(chat_id, key):
+
     key = key.replace(" ", "_").strip().lower()
 
-    connection = sqlite3.connect(DB_FILE, check_same_thread=False)
+    connection = sqlite3.connect(
+        DB_FILE,
+        check_same_thread=False
+    )
+
     cursor = connection.cursor()
 
     cursor.execute(
@@ -116,6 +137,7 @@ def recall_fact(chat_id, key):
     )
 
     row = cursor.fetchone()
+
     connection.close()
 
     if row and row[0]:
@@ -125,7 +147,12 @@ def recall_fact(chat_id, key):
 
 
 def recall_all_fact(chat_id):
-    connection = sqlite3.connect(DB_FILE, check_same_thread=False)
+
+    connection = sqlite3.connect(
+        DB_FILE,
+        check_same_thread=False
+    )
+
     cursor = connection.cursor()
 
     cursor.execute(
@@ -138,16 +165,22 @@ def recall_all_fact(chat_id):
     )
 
     rows = cursor.fetchall()
+
     connection.close()
 
     return rows
 
 
 def remembered_fact(chat_id, key, value):
+
     key = key.replace(" ", "_").strip().lower()
     value = value.strip()
 
-    connection = sqlite3.connect(DB_FILE, check_same_thread=False)
+    connection = sqlite3.connect(
+        DB_FILE,
+        check_same_thread=False
+    )
+
     cursor = connection.cursor()
 
     cursor.execute(
@@ -167,12 +200,18 @@ def remembered_fact(chat_id, key, value):
 
 
 def recall_profile(chat_id, key_list):
-    connection = sqlite3.connect(DB_FILE, check_same_thread=False)
+
+    connection = sqlite3.connect(
+        DB_FILE,
+        check_same_thread=False
+    )
+
     cursor = connection.cursor()
 
     profile = []
 
     for key in key_list:
+
         key = key.replace(" ", "_").lower().strip()
 
         cursor.execute(
@@ -203,7 +242,7 @@ def recall_profile(chat_id, key_list):
 def send_to_n8n(chat_id, message):
 
     try:
-        # Get all saved memories
+
         conn = sqlite3.connect(DB_FILE)
         cursor = conn.cursor()
 
@@ -217,16 +256,15 @@ def send_to_n8n(chat_id, message):
         )
 
         memories = cursor.fetchall()
+
         conn.close()
 
-        # Convert memories into readable text
         memory_text = "\n".join(
             f"{key}: {value}"
             for key, value in memories
             if key != "temp_key"
         )
 
-        # Payload sent to n8n
         payload = {
             "chat_id": str(chat_id),
             "message": message,
@@ -240,19 +278,15 @@ def send_to_n8n(chat_id, message):
         print("Memory:", memory_text)
         print("===================================")
 
-        # Send request to n8n
         response = requests.post(
             N8N_WEBHOOK_URL,
             json=payload,
             timeout=15
         )
 
-        # IMPORTANT:
-        # Print n8n response so Railway logs show what happened
         print("N8N STATUS CODE:", response.status_code)
         print("N8N RESPONSE:", response.text)
 
-        # Check whether request succeeded
         response.raise_for_status()
 
         print("Message successfully sent to n8n.")
@@ -260,15 +294,19 @@ def send_to_n8n(chat_id, message):
         return response
 
     except requests.exceptions.Timeout:
+
         print("ERROR: n8n request timed out.")
 
     except requests.exceptions.HTTPError as e:
+
         print("ERROR: n8n returned an HTTP error:", e)
 
     except requests.exceptions.RequestException as e:
+
         print("ERROR: Could not connect to n8n:", e)
 
     except Exception as e:
+
         print("ERROR in send_to_n8n:", e)
 
     return None
@@ -283,7 +321,10 @@ def start(message):
 
     chat_id = message.chat.id
 
-    saved_name = recall_fact(chat_id, "name")
+    saved_name = recall_fact(
+        chat_id,
+        "name"
+    )
 
     if saved_name:
 
@@ -305,7 +346,10 @@ def start(message):
             reply_markup=markup
         )
 
-        update_user_state(chat_id, "Menu")
+        update_user_state(
+            chat_id,
+            "Menu"
+        )
 
     else:
 
@@ -316,7 +360,10 @@ def start(message):
             reply_markup=types.ReplyKeyboardRemove()
         )
 
-        update_user_state(chat_id, "ASK_NAME")
+        update_user_state(
+            chat_id,
+            "ASK_NAME"
+        )
 
 
 # =========================================================
@@ -331,6 +378,7 @@ def conversational(message):
     chat_id = message.chat.id
     User_text = message.text
     current_state = get_user_state(chat_id)
+
 
     # =====================================================
     # ASK NAME
@@ -356,6 +404,7 @@ def conversational(message):
 
         return
 
+
     # =====================================================
     # ASK ADDRESS
     # =====================================================
@@ -379,6 +428,7 @@ def conversational(message):
         )
 
         return
+
 
     # =====================================================
     # ASK PHONE
@@ -418,11 +468,13 @@ def conversational(message):
 
         return
 
+
     # =====================================================
     # MENU
     # =====================================================
 
     elif current_state == "Menu":
+
 
         # -------------------------------------------------
         # VIEW PROFILE
@@ -478,6 +530,7 @@ def conversational(message):
 
                 return
 
+
         # -------------------------------------------------
         # ADD MORE INFO
         # -------------------------------------------------
@@ -486,8 +539,10 @@ def conversational(message):
 
             bot.send_message(
                 chat_id,
-                "What else would you like to save here as info "
-                "for eg(hobby)?",
+                "What else would you like to save here as info?\n\n"
+                "You can enter multiple keys separated by commas.\n"
+                "For example:\n"
+                "hobby, colour, country",
                 reply_markup=types.ReplyKeyboardRemove()
             )
 
@@ -497,6 +552,7 @@ def conversational(message):
             )
 
             return
+
 
         # -------------------------------------------------
         # FETCH DATA
@@ -516,6 +572,7 @@ def conversational(message):
             )
 
             return
+
 
         # -------------------------------------------------
         # FETCH ALL DATA
@@ -542,6 +599,7 @@ def conversational(message):
             for k, v in Data:
 
                 if k != "temp_key":
+
                     og_data.append(
                         (k, v)
                     )
@@ -572,13 +630,17 @@ def conversational(message):
 
             return
 
+
         # -------------------------------------------------
         # NORMAL AI MESSAGE
         # -------------------------------------------------
 
         else:
 
-            print("User sent normal AI message:", User_text)
+            print(
+                "User sent normal AI message:",
+                User_text
+            )
 
             send_to_n8n(
                 chat_id,
@@ -586,6 +648,7 @@ def conversational(message):
             )
 
             return
+
 
     # =====================================================
     # ASK TYPE
@@ -638,21 +701,58 @@ def conversational(message):
 
         return
 
+
     # =====================================================
     # CHOOSE KEY
     # =====================================================
 
     elif current_state == "CHOOSE_KEY":
 
-        remembered_fact(
-            chat_id,
-            "temp_key",
-            User_text
-        )
+        # Example:
+        #
+        # name, colour, country
+        #
+        # becomes:
+        #
+        # ['name', 'colour', 'country']
+
+        temp_key = [
+            key.strip()
+            for key in User_text.split(',')
+        ]
+
+        # Store the temporary keys
+        # as one string in SQLite
+
+        with sqlite3.connect(DB_FILE) as connection:
+
+            cursor = connection.cursor()
+
+            cursor.execute(
+                """
+                INSERT OR REPLACE INTO user(
+                    chat_id,
+                    memory_key,
+                    memory_value
+                )
+                VALUES(?, ?, ?)
+                """,
+                (
+                    str(chat_id),
+                    "temp_key",
+                    ",".join(temp_key)
+                )
+            )
+
+        keys = ""
+
+        for key in temp_key:
+
+            keys += f"{key}\n"
 
         bot.send_message(
             chat_id,
-            f"What value {User_text} holds?",
+            f"Enter the values in the same order:\n\n{keys}",
             reply_markup=types.ReplyKeyboardRemove()
         )
 
@@ -663,22 +763,60 @@ def conversational(message):
 
         return
 
+
     # =====================================================
     # CHOOSE VALUE
     # =====================================================
 
     elif current_state == "CHOOSE_VALUE":
 
-        key = recall_fact(
-            chat_id,
-            "temp_key"
-        )
+        # Example:
+        #
+        # Shehzar, gray, India
+        #
+        # becomes:
+        #
+        # ['Shehzar', 'gray', 'India']
 
-        if not key:
+        values = [
+            value.strip()
+            for value in User_text.split(',')
+        ]
+
+
+        # -----------------------------------------------
+        # Get temporary keys from database
+        # -----------------------------------------------
+
+        with sqlite3.connect(DB_FILE) as connection:
+
+            cursor = connection.cursor()
+
+            cursor.execute(
+                """
+                SELECT memory_value
+                FROM user
+                WHERE chat_id=? AND memory_key=?
+                """,
+                (
+                    str(chat_id),
+                    "temp_key"
+                )
+            )
+
+            result = cursor.fetchone()
+
+
+        # -----------------------------------------------
+        # Check if temporary keys exist
+        # -----------------------------------------------
+
+        if result is None:
 
             bot.send_message(
                 chat_id,
-                "Something went wrong. Please try Add More Info again."
+                "Something went wrong. "
+                "Please try Add More Info again."
             )
 
             update_user_state(
@@ -688,11 +826,68 @@ def conversational(message):
 
             return
 
-        remembered_fact(
-            chat_id,
-            key,
-            User_text
-        )
+
+        # -----------------------------------------------
+        # Convert stored string back into a list
+        # -----------------------------------------------
+
+        temp_key = [
+            key.strip()
+            for key in result[0].split(',')
+        ]
+
+
+        # -----------------------------------------------
+        # Check number of keys and values
+        # -----------------------------------------------
+
+        if len(temp_key) != len(values):
+
+            bot.send_message(
+                chat_id,
+                f"You entered {len(temp_key)} keys "
+                f"but {len(values)} values.\n\n"
+                "Please enter the same number of "
+                "values separated by commas."
+            )
+
+            return
+
+
+        # -----------------------------------------------
+        # Save key-value pairs
+        # -----------------------------------------------
+
+        with sqlite3.connect(DB_FILE) as connection:
+
+            cursor = connection.cursor()
+
+            for key, value in zip(temp_key, values):
+
+                remembered_fact(
+                    chat_id,
+                    key,
+                    value
+                )
+
+
+            # Delete temporary keys
+
+            cursor.execute(
+                """
+                DELETE FROM user
+                WHERE chat_id=? AND memory_key=?
+                """,
+                (
+                    str(chat_id),
+                    "temp_key"
+                )
+            )
+
+
+        # -----------------------------------------------
+        # Create normal menu
+        # -----------------------------------------------
 
         markup = types.ReplyKeyboardMarkup(
             resize_keyboard=True,
@@ -706,9 +901,10 @@ def conversational(message):
             "Fetch All Data"
         )
 
+
         bot.send_message(
             chat_id,
-            f'Your custom information under "{key}" has been saved!',
+            "Saved ✅",
             reply_markup=markup
         )
 
